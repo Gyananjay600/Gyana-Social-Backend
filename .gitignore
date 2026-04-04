@@ -1,0 +1,91 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Compiled Files ###
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+
+### Logs ###
+*.log
+*.log.*
+logs/
+
+### Environment Files ###
+.env
+.env.local
+.env.*.local
+*.local.properties
+application-local.properties
+application-dev.properties
+
+### OS Files ###
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+### Maven ###
+pom.xml.bak
+.m2/
+mvnw.cmd.bak
+
+### Build Output ###
+build_output.txt
+*.gradle
+.gradle/
+
+### Node (if applicable) ###
+node_modules/
+npm-debug.log
+
+### Database Files ###
+*.db
+*.sqlite
+*.sqlite3
+
+### Temporary Files ###
+*.tmp
+*.temp
+.tmp/
+temp/
+
+### System Files ###
+.DS_Store
+.AppleDouble
+.LSOverride
+.env.example
