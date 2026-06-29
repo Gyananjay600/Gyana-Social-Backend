@@ -97,3 +97,16 @@ target/
 *.md
 
 !README.md
+
+
+# IDE
+.idea/
+.settings/
+.classpath
+.project
+
+# Maven
+target/
+
+# Environment
+.env
