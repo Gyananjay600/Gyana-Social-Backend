@@ -1,0 +1,66 @@
+<!-- Navigation Sidebar Component -->
+<div th:fragment="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <a href="/ui/dashboard" class="logo">
+            <i class="fas fa-camera"></i>
+            <span>Gyana Social</span>
+        </a>
+    </div>
+    
+    <div class="sidebar-menu">
+        <a href="/ui/dashboard" class="menu-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="/ui/feed" class="menu-item">
+            <i class="fas fa-stream"></i>
+            <span>Feed</span>
+        </a>
+        <a href="/ui/explore" class="menu-item">
+            <i class="fas fa-compass"></i>
+            <span>Explore</span>
+        </a>
+        <a href="/ui/stories" class="menu-item">
+            <i class="fas fa-square"></i>
+            <span>Stories</span>
+        </a>
+        <a href="/ui/reels" class="menu-item">
+            <i class="fas fa-film"></i>
+            <span>Reels</span>
+        </a>
+        <a href="/ui/messages" class="menu-item">
+            <i class="fas fa-envelope"></i>
+            <span>Messages</span>
+        </a>
+        <hr class="sidebar-divider">
+        <a href="/ui/profile" class="menu-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+        <a href="/ui/users/suggestions" class="menu-item">
+            <i class="fas fa-user-plus"></i>
+            <span>Discover</span>
+        </a>
+        <a href="/ui/settings" class="menu-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
+        <a href="#" onclick="logout()" class="menu-item danger">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+    
+    <button class="create-btn" onclick="window.location.href='/ui/posts/create'">
+        <i class="fas fa-plus"></i> Create
+    </button>
+</div>
+
+<script>
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('jwt');
+        window.location.href = '/login';
+    }
+}
+</script>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Post - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/create-post.css}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" th:insert="~{nav :: sidebar}"></nav>
+        
+        <main class="main-content">
+            <div class="create-post-container">
+                <div class="create-post-header">
+                    <h1><i class="fas fa-image"></i> Create Post</h1>
+                    <p>Share your moment with the world!</p>
+                </div>
+                
+                <form id="createPostForm" class="create-post-form">
+                    <div class="form-group">
+                        <label>Caption</label>
+                        <textarea id="caption" name="caption" placeholder="What's on your mind?" class="caption-input"></textarea>
+                    </div>
+                    
+                    <div class="media-section">
+                        <div class="form-group">
+                            <label for="imageInput">Add Image</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="imageInput" name="image" accept="image/*" class="file-input">
+                                <div class="file-placeholder">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Click to upload image or drag and drop</p>
+                                </div>
+                            </div>
+                            <div id="imagePreview" class="preview-container"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="videoInput">Add Video</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="videoInput" name="video" accept="video/*" class="file-input">
+                                <div class="file-placeholder">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Click to upload video or drag and drop</p>
+                                </div>
+                            </div>
+                            <div id="videoPreview" class="preview-container"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" onclick="window.location.href='/ui/feed'">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn-publish">
+                            <i class="fas fa-check"></i> Publish
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const videoInput = document.getElementById('videoInput');
+        const createPostForm = document.getElementById('createPostForm');
+        
+        // Image preview
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('imagePreview').innerHTML = `
+                        <img src="${event.target.result}" alt="Preview">
+                        <button type="button" class="remove-btn" onclick="removePreview('image')">Remove</button>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Video preview
+        videoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('videoPreview').innerHTML = `
+                        <video controls>
+                            <source src="${event.target.result}" type="video/mp4">
+                        </video>
+                        <button type="button" class="remove-btn" onclick="removePreview('video')">Remove</button>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        function removePreview(type) {
+            if (type === 'image') {
+                document.getElementById('imageInput').value = '';
+                document.getElementById('imagePreview').innerHTML = '';
+            } else {
+                document.getElementById('videoInput').value = '';
+                document.getElementById('videoPreview').innerHTML = '';
+            }
+        }
+        
+        createPostForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const caption = document.getElementById('caption').value;
+            const imageInput = document.getElementById('imageInput');
+            const videoInput = document.getElementById('videoInput');
+            
+            // Note: For simplicity, sending URLs. In production, use FormData for file uploads
+            const postData = {
+                caption: caption,
+                image: imageInput.value ? imageInput.value : null,
+                video: videoInput.value ? videoInput.value : null
+            };
+            
+            try {
+                const response = await api.post('/api/posts', postData);
+                showNotification('Post published successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/ui/feed';
+                }, 1500);
+            } catch (error) {
+                showNotification('Failed to create post', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Story - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/create-story.css}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" th:insert="~{nav :: sidebar}"></nav>
+        
+        <main class="main-content">
+            <div class="create-story-container">
+                <div class="story-header">
+                    <h1><i class="fas fa-image"></i> Create Story</h1>
+                    <p>Stories disappear after 24 hours</p>
+                </div>
+                
+                <form id="createStoryForm" class="create-story-form">
+                    <div class="form-group">
+                        <label>Story Content</label>
+                        <textarea id="storyContent" name="content" placeholder="What's in your story?" class="content-input"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="storyImage">Upload Image</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="storyImage" name="image" accept="image/*" class="file-input">
+                            <div class="file-placeholder">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to upload image</p>
+                            </div>
+                        </div>
+                        <div id="storyPreview" class="preview-container"></div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" onclick="window.history.back()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn-publish">
+                            <i class="fas fa-check"></i> Publish Story
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        const storyImageInput = document.getElementById('storyImage');
+        const createStoryForm = document.getElementById('createStoryForm');
+        
+        storyImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('storyPreview').innerHTML = `
+                        <img src="${event.target.result}" alt="Preview">
+                        <button type="button" class="remove-btn" onclick="removeStoryPreview()">Remove</button>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        function removeStoryPreview() {
+            document.getElementById('storyImage').value = '';
+            document.getElementById('storyPreview').innerHTML = '';
+        }
+        
+        createStoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const content = document.getElementById('storyContent').value;
+            const imageInput = document.getElementById('storyImage');
+            
+            const storyData = {
+                content: content,
+                image: imageInput.value ? imageInput.value : null
+            };
+            
+            try {
+                const response = await api.post('/api/stories', storyData);
+                showNotification('Story published successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/ui/stories';
+                }, 1500);
+            } catch (error) {
+                showNotification('Failed to create story', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

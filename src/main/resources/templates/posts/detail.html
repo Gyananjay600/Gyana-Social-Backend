@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/post-detail.css}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" th:insert="~{nav :: sidebar}"></nav>
+        
+        <main class="main-content">
+            <div class="post-detail-container">
+                <button class="back-btn" onclick="window.history.back()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                
+                <div class="post-detail" id="postDetail">
+                    <!-- Post will be loaded here -->
+                </div>
+                
+                <div class="comments-section">
+                    <h3>Comments</h3>
+                    <div id="commentsList"></div>
+                    
+                    <form id="addCommentForm" class="comment-form">
+                        <input type="text" id="commentText" placeholder="Add a comment..." required>
+                        <button type="submit" class="comment-submit">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:inline="javascript">
+        const postId = [[${postId}]];
+        
+        async function loadPostDetail() {
+            try {
+                const post = await api.get(`/api/posts/${postId}`);
+                displayPost(post);
+                loadComments();
+            } catch (error) {
+                showNotification('Failed to load post', 'error');
+            }
+        }
+        
+        function displayPost(post) {
+            const container = document.getElementById('postDetail');
+            container.innerHTML = `
+                <div class="post-header">
+                    <div class="user-info">
+                        <img src="https://via.placeholder.com/50" alt="Avatar" class="avatar">
+                        <div>
+                            <strong>${post.user.firstName} ${post.user.lastName}</strong>
+                            <small>@${post.user.email}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="post-content">
+                    <p>${post.caption}</p>
+                    ${post.image ? `<img src="${post.image}" alt="Post" class="post-image">` : ''}
+                    ${post.video ? `<video src="${post.video}" class="post-video" controls></video>` : ''}
+                </div>
+                
+                <div class="post-actions">
+                    <button class="action-btn" onclick="likePost(${post.id})">
+                        <i class="far fa-heart"></i> ${post.liked.length} Likes
+                    </button>
+                    <button class="action-btn">
+                        <i class="far fa-comment"></i> ${post.comment?.length || 0} Comments
+                    </button>
+                    <button class="action-btn" onclick="savePost(${post.id})">
+                        <i class="far fa-bookmark"></i> Save
+                    </button>
+                </div>
+            `;
+        }
+        
+        async function loadComments() {
+            try {
+                const comments = await api.get(`/api/comments/post/${postId}`);
+                displayComments(comments);
+            } catch (error) {
+                console.error('Failed to load comments');
+            }
+        }
+        
+        function displayComments(comments) {
+            const container = document.getElementById('commentsList');
+            container.innerHTML = '';
+            
+            comments.forEach(comment => {
+                const commentHTML = `
+                    <div class="comment-item">
+                        <img src="https://via.placeholder.com/35" alt="Avatar" class="avatar-sm">
+                        <div class="comment-content">
+                            <strong>${comment.user.firstName} ${comment.user.lastName}</strong>
+                            <p>${comment.content}</p>
+                            <small>Just now</small>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += commentHTML;
+            });
+        }
+        
+        async function likePost(postId) {
+            try {
+                await api.put(`/api/posts/like/${postId}`);
+                showNotification('Post liked!', 'success');
+                loadPostDetail();
+            } catch (error) {
+                showNotification('Failed to like post', 'error');
+            }
+        }
+        
+        async function savePost(postId) {
+            try {
+                await api.put(`/api/posts/save/${postId}`);
+                showNotification('Post saved!', 'success');
+            } catch (error) {
+                showNotification('Failed to save post', 'error');
+            }
+        }
+        
+        document.getElementById('addCommentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const commentText = document.getElementById('commentText').value;
+            
+            try {
+                // Get current user ID - you'll need to implement this based on JWT
+                const userId = 1; // Placeholder
+                const comment = {
+                    content: commentText
+                };
+                
+                await api.post(`/api/comments/post/${postId}/user/${userId}`, comment);
+                document.getElementById('commentText').value = '';
+                showNotification('Comment added!', 'success');
+                loadComments();
+            } catch (error) {
+                showNotification('Failed to add comment', 'error');
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', loadPostDetail);
+    </script>
+</body>
+</html>

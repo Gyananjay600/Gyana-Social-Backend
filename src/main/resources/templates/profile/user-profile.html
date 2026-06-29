@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" th:insert="~{nav :: sidebar}"></nav>
+        
+        <main class="main-content">
+            <div class="profile-container">
+                <!-- Profile Header -->
+                <div class="profile-header" id="profileHeader">
+                    <div class="cover-image">
+                        <img src="https://via.placeholder.com/1200x300" alt="Cover">
+                    </div>
+                    
+                    <div class="profile-info">
+                        <img src="https://via.placeholder.com/120" alt="Avatar" class="profile-avatar">
+                        <div class="profile-details">
+                            <h1 id="userName"></h1>
+                            <p id="userHandle" class="handle"></p>
+                            <p id="userBio" class="bio"></p>
+                        </div>
+                        
+                        <div class="profile-actions">
+                            <button class="btn-follow" id="followBtn" onclick="toggleFollow()">
+                                <i class="fas fa-user-plus"></i> Follow
+                            </button>
+                            <button class="btn-message" onclick="sendMessage()">
+                                <i class="fas fa-envelope"></i> Message
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats -->
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number" id="postCount">0</span>
+                        <span class="stat-label">Posts</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="followerCount">0</span>
+                        <span class="stat-label">Followers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="followingCount">0</span>
+                        <span class="stat-label">Following</span>
+                    </div>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="profile-tabs">
+                    <button class="tab-btn active" onclick="switchTab('posts')">
+                        <i class="fas fa-th"></i> Posts
+                    </button>
+                    <button class="tab-btn" onclick="switchTab('reels')">
+                        <i class="fas fa-film"></i> Reels
+                    </button>
+                </div>
+                
+                <!-- Posts Grid -->
+                <div class="tab-content active" id="postsTab">
+                    <div class="posts-grid" id="userPosts"></div>
+                </div>
+                
+                <!-- Reels Grid -->
+                <div class="tab-content" id="reelsTab">
+                    <div class="reels-grid" id="userReels"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:inline="javascript">
+        const userId = [[${userId}]];
+        let isFollowing = false;
+        
+        async function loadUserProfile() {
+            try {
+                const user = await api.get(`/api/users/${userId}`);
+                displayProfile(user);
+                loadUserContent(user.id);
+                checkFollowStatus(user.id);
+            } catch (error) {
+                showNotification('Failed to load profile', 'error');
+            }
+        }
+        
+        function displayProfile(user) {
+            document.getElementById('userName').textContent = `${user.firstName} ${user.lastName}`;
+            document.getElementById('userHandle').textContent = `@${user.email}`;
+            document.getElementById('postCount').textContent = user.posts?.length || 0;
+            document.getElementById('followerCount').textContent = user.followers?.length || 0;
+            document.getElementById('followingCount').textContent = user.followings?.length || 0;
+        }
+        
+        async function loadUserContent(userId) {
+            try {
+                const posts = await api.get(`/api/posts/user/${userId}`);
+                const reels = await api.get(`/api/reels/user/${userId}`);
+                
+                displayUserPosts(posts);
+                displayUserReels(reels);
+            } catch (error) {
+                console.error('Failed to load user content');
+            }
+        }
+        
+        function displayUserPosts(posts) {
+            const grid = document.getElementById('userPosts');
+            grid.innerHTML = '';
+            
+            posts.forEach(post => {
+                const postItem = `
+                    <div class="grid-item" onclick="window.location.href='/ui/posts/${post.id}'">
+                        ${post.image ? `<img src="${post.image}" alt="Post">` : ''}
+                        ${post.video ? `<video src="${post.video}"></video>` : ''}
+                    </div>
+                `;
+                grid.innerHTML += postItem;
+            });
+        }
+        
+        function displayUserReels(reels) {
+            const grid = document.getElementById('userReels');
+            grid.innerHTML = '';
+            
+            reels.forEach(reel => {
+                const reelItem = `
+                    <div class="grid-item" onclick="window.location.href='/ui/reels/${reel.id}'">
+                        <video src="${reel.video}"></video>
+                    </div>
+                `;
+                grid.innerHTML += reelItem;
+            });
+        }
+        
+        async function checkFollowStatus() {
+            // Check if current user follows this user
+            try {
+                const currentUser = await api.get('/api/users/profile');
+                isFollowing = currentUser.followings.includes(userId);
+                updateFollowButton();
+            } catch (error) {
+                console.error('Failed to check follow status');
+            }
+        }
+        
+        async function toggleFollow() {
+            try {
+                await api.put(`/api/users/follow/${userId}`);
+                isFollowing = !isFollowing;
+                updateFollowButton();
+                showNotification(isFollowing ? 'Following!' : 'Unfollowed', 'success');
+                loadUserProfile();
+            } catch (error) {
+                showNotification('Failed to update follow status', 'error');
+            }
+        }
+        
+        function updateFollowButton() {
+            const btn = document.getElementById('followBtn');
+            if (isFollowing) {
+                btn.classList.add('following');
+                btn.innerHTML = '<i class="fas fa-check"></i> Following';
+            } else {
+                btn.classList.remove('following');
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
+            }
+        }
+        
+        function sendMessage() {
+            window.location.href = `/ui/messages/${userId}`;
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadUserProfile);
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/messages.css}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" th:insert="~{nav :: sidebar}"></nav>
+        
+        <main class="main-content">
+            <div class="messages-container">
+                <div class="conversations-list" id="conversationsList">
+                    <h2>Messages</h2>
+                    <div class="search-box">
+                        <input type="text" placeholder="Search conversations..." id="searchConversations">
+                    </div>
+                    <div class="conversations" id="conversations"></div>
+                </div>
+                
+                <div class="chat-area" id="chatArea">
+                    <div class="empty-state">
+                        <p>Select a conversation to start messaging</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        async function loadConversations() {
+            try {
+                const users = await api.get('/api/users');
+                displayConversations(users);
+            } catch (error) {
+                console.error('Failed to load conversations');
+            }
+        }
+        
+        function displayConversations(users) {
+            const container = document.getElementById('conversations');
+            container.innerHTML = '';
+            
+            users.slice(0, 20).forEach(user => {
+                const convoItem = `
+                    <div class="conversation-item" onclick="openChat(${user.id})">
+                        <img src="https://via.placeholder.com/50" alt="Avatar">
+                        <div class="convo-info">
+                            <h4>${user.firstName} ${user.lastName}</h4>
+                            <p>Last message here...</p>
+                        </div>
+                        <span class="time">2m</span>
+                    </div>
+                `;
+                container.innerHTML += convoItem;
+            });
+        }
+        
+        function openChat(userId) {
+            window.location.href = `/ui/messages/${userId}`;
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadConversations);
+    </script>
+</body>
+</html>

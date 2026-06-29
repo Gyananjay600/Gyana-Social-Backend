@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" th:insert="~{nav :: sidebar}"></nav>
+        
+        <main class="main-content">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <button class="back-btn" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="header-info">
+                        <img src="https://via.placeholder.com/40" alt="Avatar">
+                        <h2 id="chatUserName"></h2>
+                    </div>
+                </div>
+                
+                <div class="messages-area" id="messagesArea"></div>
+                
+                <div class="message-input-area">
+                    <input type="text" id="messageInput" placeholder="Type a message..." class="message-input">
+                    <button onclick="sendMessage()" class="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:inline="javascript">
+        const userId = [[${userId}]];
+        
+        async function loadChat() {
+            try {
+                const user = await api.get(`/api/users/${userId}`);
+                document.getElementById('chatUserName').textContent = `${user.firstName} ${user.lastName}`;
+            } catch (error) {
+                showNotification('Failed to load chat', 'error');
+            }
+        }
+        
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+            
+            if (!message.trim()) return;
+            
+            // Add message to UI
+            const messagesArea = document.getElementById('messagesArea');
+            const messageEl = document.createElement('div');
+            messageEl.className = 'message sent';
+            messageEl.innerHTML = `<p>${message}</p>`;
+            messagesArea.appendChild(messageEl);
+            
+            messageInput.value = '';
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+        
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        document.addEventListener('DOMContentLoaded', loadChat);
+    </script>
+</body>
+</html>

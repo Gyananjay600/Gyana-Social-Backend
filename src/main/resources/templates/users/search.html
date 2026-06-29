@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Users - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/search-users.css}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" th:insert="~{nav :: sidebar}"></nav>
+        
+        <main class="main-content">
+            <div class="search-container">
+                <div class="search-header">
+                    <h1><i class="fas fa-search"></i> Search Users</h1>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search by name or email..." class="search-input">
+                    <button class="search-btn"><i class="fas fa-search"></i></button>
+                </div>
+                
+                <div class="results-list" id="searchResults"></div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value;
+            
+            if (query.length < 2) {
+                document.getElementById('searchResults').innerHTML = '';
+                return;
+            }
+            
+            try {
+                const users = await api.get(`/api/users/search?query=${query}`);
+                displayResults(users);
+            } catch (error) {
+                console.error('Search failed');
+            }
+        });
+        
+        function displayResults(users) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (!users || users.length === 0) {
+                resultsContainer.innerHTML = '<div class="empty-state"><p>No users found</p></div>';
+                return;
+            }
+            
+            resultsContainer.innerHTML = '';
+            users.forEach(user => {
+                const userCard = `
+                    <div class="user-card">
+                        <img src="https://via.placeholder.com/50" alt="Avatar" class="user-avatar">
+                        <div class="user-info">
+                            <h3>${user.firstName} ${user.lastName}</h3>
+                            <p>@${user.email}</p>
+                        </div>
+                        <button class="btn-follow" onclick="followUser(${user.id})">
+                            <i class="fas fa-user-plus"></i> Follow
+                        </button>
+                        <button class="btn-view" onclick="window.location.href='/ui/profile/${user.id}'">
+                            View
+                        </button>
+                    </div>
+                `;
+                resultsContainer.innerHTML += userCard;
+            });
+        }
+        
+        async function followUser(userId) {
+            try {
+                await api.put(`/api/users/follow/${userId}`);
+                showNotification('Followed!', 'success');
+            } catch (error) {
+                showNotification('Failed to follow user', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

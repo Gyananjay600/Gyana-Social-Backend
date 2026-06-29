@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Story - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/story-view.css}">
+</head>
+<body class="story-view-body">
+    <div class="story-viewer" id="storyViewer">
+        <!-- Story will be loaded here -->
+    </div>
+    
+    <button class="close-btn" onclick="window.history.back()">
+        <i class="fas fa-times"></i>
+    </button>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:inline="javascript">
+        const storyId = [[${storyId}]];
+        
+        async function loadStory() {
+            try {
+                const story = await api.get(`/api/stories/${storyId}`);
+                displayStory(story);
+            } catch (error) {
+                showNotification('Failed to load story', 'error');
+                window.history.back();
+            }
+        }
+        
+        function displayStory(story) {
+            const viewer = document.getElementById('storyViewer');
+            viewer.innerHTML = `
+                <div class="story-content">
+                    ${story.image ? `<img src="${story.image}" alt="Story">` : `<div class="story-text">${story.content}</div>`}
+                </div>
+                <div class="story-info">
+                    <img src="https://via.placeholder.com/40" alt="Avatar" class="user-avatar">
+                    <div>
+                        <strong>${story.user.firstName} ${story.user.lastName}</strong>
+                        <small>2h ago</small>
+                    </div>
+                </div>
+            `;
+            
+            // Auto close after 5 seconds
+            setTimeout(() => {
+                window.history.back();
+            }, 5000);
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadStory);
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stories - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/stories.css}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" th:insert="~{nav :: sidebar}"></nav>
+        
+        <main class="main-content">
+            <div class="stories-container">
+                <div class="stories-header">
+                    <h1><i class="fas fa-square"></i> Stories</h1>
+                    <button class="btn-create" onclick="window.location.href='/ui/stories/create'">
+                        <i class="fas fa-plus"></i> Create Story
+                    </button>
+                </div>
+                
+                <div class="stories-list" id="storiesList">
+                    <!-- Stories will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        async function loadStories() {
+            try {
+                const stories = await api.get('/api/stories/active/all');
+                displayStories(stories);
+            } catch (error) {
+                showNotification('Failed to load stories', 'error');
+            }
+        }
+        
+        function displayStories(stories) {
+            const container = document.getElementById('storiesList');
+            
+            if (!stories || stories.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No active stories</p></div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            stories.forEach(story => {
+                const storyItem = `
+                    <div class="story-item" onclick="window.location.href='/ui/stories/${story.id}'">
+                        <div class="story-image">
+                            ${story.image ? `<img src="${story.image}" alt="Story">` : `<div class="story-placeholder">${story.content}</div>`}
+                        </div>
+                        <div class="story-info">
+                            <img src="https://via.placeholder.com/40" alt="Avatar" class="user-avatar">
+                            <div>
+                                <strong>${story.user.firstName}</strong>
+                                <small>2h ago</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += storyItem;
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadStories);
+    </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Reel - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/reel-view.css}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" th:insert="~{nav :: sidebar}"></nav>
+        
+        <main class="main-content">
+            <div class="reel-viewer">
+                <div class="reel-container">
+                    <video id="reelVideo" class="reel-player" controls autoplay>
+                        <!-- Video will be loaded here -->
+                    </video>
+                    
+                    <div class="reel-actions">
+                        <button class="action-btn" id="likeBtn" onclick="likeReel()">
+                            <i class="far fa-heart"></i>
+                            <span>Like</span>
+                        </button>
+                        <button class="action-btn" onclick="shareReel()">
+                            <i class="fas fa-share"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="reel-details">
+                    <h2 id="reelCaption"></h2>
+                    <div class="creator-info">
+                        <img src="https://via.placeholder.com/40" alt="Avatar" class="avatar">
+                        <div>
+                            <strong id="creatorName"></strong>
+                            <button class="follow-btn" onclick="toggleFollow()">Follow</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script th:inline="javascript">
+        const reelId = [[${reelId}]];
+        let currentReel = null;
+        
+        async function loadReel() {
+            try {
+                currentReel = await api.get(`/api/reels/${reelId}`);
+                displayReel(currentReel);
+                incrementViewCount();
+            } catch (error) {
+                showNotification('Failed to load reel', 'error');
+            }
+        }
+        
+        function displayReel(reel) {
+            document.getElementById('reelVideo').src = reel.video;
+            document.getElementById('reelCaption').textContent = reel.caption;
+            document.getElementById('creatorName').textContent = `${reel.user.firstName} ${reel.user.lastName}`;
+        }
+        
+        async function likeReel() {
+            try {
+                await api.put(`/api/reels/like/${reelId}`);
+                showNotification('Reel liked!', 'success');
+                loadReel();
+            } catch (error) {
+                showNotification('Failed to like reel', 'error');
+            }
+        }
+        
+        async function incrementViewCount() {
+            try {
+                await api.put(`/api/reels/view/${reelId}`);
+            } catch (error) {
+                console.error('Failed to update view count');
+            }
+        }
+        
+        function shareReel() {
+            showNotification('Reel link copied!', 'success');
+        }
+        
+        function toggleFollow() {
+            showNotification('Followed!', 'success');
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadReel);
+    </script>
+</body>
+</html>

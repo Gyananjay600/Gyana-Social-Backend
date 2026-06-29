@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed - Gyana Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/feed.css}">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" th:insert="~{nav :: sidebar}"></nav>
+        
+        <main class="main-content">
+            <div class="feed-container">
+                <div class="feed-header">
+                    <h1><i class="fas fa-stream"></i> Your Feed</h1>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" onclick="filterPosts('all')">All</button>
+                        <button class="filter-btn" onclick="filterPosts('following')">Following</button>
+                    </div>
+                </div>
+                
+                <div class="feed-posts" id="feedPosts">
+                    <!-- Posts will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Suggested Users Sidebar -->
+            <aside class="feed-sidebar">
+                <div class="suggested-users">
+                    <h3>Suggested For You</h3>
+                    <div id="suggestedUsers"></div>
+                </div>
+            </aside>
+        </main>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script th:src="@{/js/api.js}"></script>
+    <script th:src="@{/js/notifications.js}"></script>
+    <script>
+        async function loadFeed() {
+            try {
+                const posts = await api.get('/api/posts');
+                displayPosts(posts);
+            } catch (error) {
+                showNotification('Failed to load feed', 'error');
+            }
+        }
+        
+        function displayPosts(posts) {
+            const container = document.getElementById('feedPosts');
+            container.innerHTML = '';
+            
+            posts.forEach(post => {
+                const postHTML = `
+                    <div class="post-card" data-post-id="${post.id}">
+                        <div class="post-header">
+                            <div class="user-info">
+                                <img src="https://via.placeholder.com/40" alt="Avatar" class="avatar">
+                                <div>
+                                    <strong>${post.user.firstName} ${post.user.lastName}</strong>
+                                    <small>@${post.user.email}</small>
+                                </div>
+                            </div>
+                            <button class="options-btn"><i class="fas fa-ellipsis-v"></i></button>
+                        </div>
+                        
+                        ${post.image ? `<img src="${post.image}" alt="Post" class="post-image">` : ''}
+                        ${post.video ? `<video src="${post.video}" class="post-video" controls></video>` : ''}
+                        
+                        <div class="post-caption">
+                            ${post.caption}
+                        </div>
+                        
+                        <div class="post-stats">
+                            <span>${post.liked.length} likes</span>
+                            <span>${post.comment?.length || 0} comments</span>
+                        </div>
+                        
+                        <div class="post-actions">
+                            <button class="action-btn like-btn" onclick="likePost(${post.id})">
+                                <i class="far fa-heart"></i> Like
+                            </button>
+                            <button class="action-btn" onclick="window.location.href='/ui/posts/${post.id}'">
+                                <i class="far fa-comment"></i> Comment
+                            </button>
+                            <button class="action-btn save-btn" onclick="savePost(${post.id})">
+                                <i class="far fa-bookmark"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += postHTML;
+            });
+        }
+        
+        async function likePost(postId) {
+            try {
+                await api.put(`/api/posts/like/${postId}`);
+                showNotification('Post liked!', 'success');
+                loadFeed();
+            } catch (error) {
+                showNotification('Failed to like post', 'error');
+            }
+        }
+        
+        async function savePost(postId) {
+            try {
+                await api.put(`/api/posts/save/${postId}`);
+                showNotification('Post saved!', 'success');
+            } catch (error) {
+                showNotification('Failed to save post', 'error');
+            }
+        }
+        
+        function filterPosts(filter) {
+            // Filter logic will be implemented based on user preference
+            loadFeed();
+        }
+        
+        // Load feed on page load
+        document.addEventListener('DOMContentLoaded', loadFeed);
+    </script>
+</body>
+</html>
